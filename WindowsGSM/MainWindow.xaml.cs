@@ -2353,6 +2353,61 @@ namespace WindowsGSM
             return true;
         }
         #endregion
+        
+        #region Server Control API
+        public class ServerControl
+        {
+            private readonly MainWindow _mainWindow;
+
+            public ServerControl(MainWindow mainWindow)
+            {
+                _mainWindow = mainWindow;
+            }
+
+            private ServerTable GetServerByID(string serverID) => _mainWindow.ServerGrid.Items.Cast<ServerTable>().FirstOrDefault(server => server.ID == serverID);
+
+            private T WithServer<T>(string serverID, T defaultValue, Func<ServerTable, T> action) where T : Task
+            {
+                var server = GetServerByID(serverID);
+                return server == null ? defaultValue : action(server);
+            }
+
+            public Task StartServer(string serverID, string notes) => WithServer(
+                serverID,
+                Task.CompletedTask,
+                (server) => _mainWindow.GameServer_Start(server, notes)
+            );
+            
+            public Task StopServer(string serverID) => WithServer(
+                serverID,
+                Task.CompletedTask,
+                (server) => _mainWindow.GameServer_Start(server)
+            );
+            
+            public Task RestartServer(string serverID) => WithServer(
+                serverID,
+                Task.CompletedTask,
+                (server) => _mainWindow.GameServer_Restart(server)
+            );
+            
+            public Task<bool> UpdateServer(string serverID, string notes, bool validate) => WithServer(
+                serverID,
+                Task.FromResult(false),
+                (server) => _mainWindow.GameServer_Update(server, notes, validate)
+            );
+            
+            public Task<bool> BackupServer(string serverID, string notes) => WithServer(
+                serverID,
+                Task.FromResult(false),
+                (server) => _mainWindow.GameServer_Backup(server, notes)
+            );
+
+            public List<(string, string, string, string)> GetServerList() => _mainWindow.GetServerList();
+        }
+        
+        public ServerControl GetServerController() => new ServerControl(this);
+        
+        #endregion
 
         private async void OnGameServerExited(ServerTable server)
         {
@@ -3806,14 +3861,14 @@ namespace WindowsGSM
             return ServerGrid.Items.Count;
         }
 
-        public List<(string, string, string)> GetServerList()
+        public List<(string, string, string, string)> GetServerList()
         {
-            var list = new List<(string, string, string)>();
+            var list = new List<(string, string, string, string)>();
 
             for (int i = 0; i < ServerGrid.Items.Count; i++)
             {
                 var server = (ServerTable)ServerGrid.Items[i];
-                list.Add((server.ID, server.Status, server.Name));
+                list.Add((server.ID, server.Status, server.Name, server.Game));
             }
 
             return list;

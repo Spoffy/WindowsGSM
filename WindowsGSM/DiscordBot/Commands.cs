@@ -104,7 +104,7 @@ namespace WindowsGSM.DiscordBot
                 string status = string.Empty;
                 string servers = string.Empty;
 
-                foreach ((string id, string state, string server) in list)
+                foreach ((string id, string state, string server, string game) in list)
                 {
                     ids += $"`{id}`\n";
                     status += $"`{state}`\n";

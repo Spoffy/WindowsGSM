@@ -56,11 +56,14 @@ namespace WindowsGSM.Functions
             };
 
             var options = new CompilerParameters();
-            options.ReferencedAssemblies.Add(Assembly.GetEntryAssembly().Location);
+
             options.ReferencedAssemblies.Add("System.dll");
             options.ReferencedAssemblies.Add("System.Core.dll");
             options.ReferencedAssemblies.Add("System.Data.dll");
             options.ReferencedAssemblies.Add(ServerPath.GetBin("Newtonsoft.Json.dll"));
+            options.ReferencedAssemblies.Add(Assembly.GetEntryAssembly().Location);
+            // Adds PresentationCore
+            options.ReferencedAssemblies.AddRange(AppDomain.CurrentDomain.GetAssemblies().Where(assembly => !assembly.IsDynamic).Select(assembly => assembly.Location).ToArray());
             options.GenerateInMemory = true;
 
             var c = new Microsoft.CodeDom.Providers.DotNetCompilerPlatform.CSharpCodeProvider();
@@ -131,6 +134,12 @@ namespace WindowsGSM.Functions
             }
         }
 
-        public static dynamic GetPluginClass(PluginMetadata plugin, ServerConfig serverConfig = null) => Activator.CreateInstance(plugin.Type, serverConfig);
+        private static bool PluginAcceptsServerControl(Type pluginType) =>
+            pluginType.GetConstructor(new[] {typeof(ServerConfig), typeof(MainWindow.ServerControl)}) != null;
+
+        public static dynamic GetPluginClass(PluginMetadata plugin, ServerConfig serverConfig = null, MainWindow.ServerControl serverControl = null) => 
+            PluginAcceptsServerControl(plugin.Type) ?
+                Activator.CreateInstance(plugin.Type, serverConfig, serverControl) :
+                Activator.CreateInstance(plugin.Type, serverConfig);
     }
 }

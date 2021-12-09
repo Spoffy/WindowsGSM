@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Windows;
 using WindowsGSM.Functions;
 
 namespace WindowsGSM.GameServer.Data
@@ -62,7 +63,7 @@ namespace WindowsGSM.GameServer.Data
                     {
                         if (plugin.IsLoaded && plugin.FullName == serverGame)
                         {
-                            return PluginManagement.GetPluginClass(plugin, serverData);
+                            return PluginManagement.GetPluginClass(plugin, serverData, ((MainWindow)Application.Current.MainWindow)?.GetServerController());
                         }
                     }
 
