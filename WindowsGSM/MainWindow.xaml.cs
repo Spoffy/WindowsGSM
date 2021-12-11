@@ -2381,7 +2381,7 @@ namespace WindowsGSM
             public Task StopServer(string serverID) => WithServer(
                 serverID,
                 Task.CompletedTask,
-                (server) => _mainWindow.GameServer_Start(server)
+                (server) => _mainWindow.GameServer_Stop(server)
             );
             
             public Task RestartServer(string serverID) => WithServer(
